@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -ex
+
+if [ ! -f package.json ]; then
+  echo 'No package.json found'
+  exit 1
+fi
+
+rm -rf node_modules
+yarn cache clean
+yarn install --network-concurrency 1
