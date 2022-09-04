@@ -1,11 +1,16 @@
 #!/bin/bash
 # volume
 
-set -x
+set -e
 
 msgTag="on-volume-change"
 
-if [[ "$1" == "mute" ]]; then
+if [ -z "$1" -o "$1" == "-h" ]; then
+    echo "Usage: volume <percentage>|mute"
+    echo "Ex. volume 30%"
+    echo "    volume mute"
+    exit 0
+elif [[ "$1" == "mute" ]]; then
     pactl set-sink-mute 0 toggle
 else
     pactl set-sink-volume 0 $1
@@ -16,7 +21,7 @@ volume="$(pactl get-sink-volume 0 | head -n1 | awk '{ print $5 }')"
 mute="$(pactl get-sink-mute 0 | cut -c 7-)"
 if [[ $volume == 0 || "$mute" == "yes" ]]; then
     # Show the sound muted notification
-    dunstify -a "volume" -u low -i audio-volume-muted -h string:x-dunst-stack-tag:$msgTag "Volume Muted" 
+    dunstify -a "volume" -u low -i audio-volume-muted -h string:x-dunst-stack-tag:$msgTag "Volume Muted"
 else
     # Show the volume notification
     dunstify -a "volume" -u low -i audio-volume-high -h string:x-dunst-stack-tag:$msgTag \

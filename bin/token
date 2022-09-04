@@ -7,28 +7,18 @@ function usage {
         echo '   -l LENGTH   Specify the password length'
         echo '   -s          Include the special characters +=/'
         echo '   -d          Include digits'
-        echo '   -u          Only use upperace letters'
-        exit 1
-}
-
-function print_out {
-   local MESSAGE="${@}"
-   if [[ "${VERBOSE}" == true ]];then
-      echo "${MESSAGE}"
-   fi
+        echo '   -u          Only use uppercase letters'
+        echo '   -h          Show this help'
 }
 
 # Set default token length
 LENGTH=32
 
 # Define list of arguments expected in the input
-optstring=":svudl:"
+optstring=":shudl:"
 
 while getopts ${optstring} arg; do
   case ${arg} in
-    v)
-		VERBOSE='true'
-		;;
     l)
 		LENGTH="${OPTARG}"
 		;;
@@ -41,10 +31,15 @@ while getopts ${optstring} arg; do
 	u)
 		UPPER_CASE_ONLY='true'
 		;;
+	h)
+		usage
+        exit 0
+		;;
     ?)
 		echo "Invalid option: -${OPTARG}."
 		echo
 		usage
+        exit 1
 		;;
   esac
 done
