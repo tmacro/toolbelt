@@ -1,1 +1,162 @@
-= toolbelt
+= Toolbelt - A collection of useful shell scripts
+
+== Repository Structure
+
+[source]
+----
+repository root
+├── bin - Contains all scripts included in the toolbelt.
+├── README.adoc - Includes script documentation (You are Here)
+├── Makefile - For building documentation
+└── LICENSE - Repository license
+----
+
+== Toolbelt Scripts
+
+=== check-docker-context
+
+Prints all files included in the docker build context to stdout.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ check-docker-context
+----
+
+=== clip
+
+Copies stdin to the clipboard.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ echo "foo bar" | clip
+----
+
+
+=== copy-terminfo
+
+Copy terminfo for urxvt to the remote machine.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ copy-term-info tmac@my.remote.box.invalid
+----
+
+=== cpu-temp.sh
+
+Prints CPU package temperature as reported by `sensors` to stdout.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ cpu-temp.sh
+----
+
+=== forget-host
+
+Remove a host from `known_hosts`
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ forget-host example.com
+----
+
+=== get
+
+Wrapper script for aria2
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ get http://example.com/index.html
+----
+
+=== i3-get-window-criteria
+
+Get i3 window matching criteria
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ i3-get-window-matching-criteria
+----
+
+=== ignore
+
+Add a file to the current directory .gitignore.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ ignore __pycache__
+# Use -f if not in a git repository
+tmac@demo: ~ ignore -f __pycache__
+----
+
+=== inotify-consumers
+
+View information about inotify consumers on the system.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ inotify-consumers -h
+Usage: inotify-consumers [--help|--limits]
+
+    -l, --limits    Will print the current related limits and how to change them
+    -h, --help      Show this help
+----
+
+=== ssh-nohost/scp-nohost
+
+Convenience wrapper to ignore known_hosts for ssh/scp.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ copy-term-info tmac@my.remote.box.invalid
+----
+
+=== token
+
+Generate random tokens.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ token -h
+Usage: token [-dsu] [-l LENGTH]
+Generate a random password.
+   -l LENGTH   Specify the password length
+   -s          Include the special characters +=/
+   -d          Include digits
+   -u          Only use uppercase letters
+----
+
+=== update-yarn-deps
+
+Update yarn dependencies and lockfile.
+Needs to be run in a directory containing your `package.json`.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ update-yarn-deps
+----
+
+=== volume
+
+
+Adjust system volume.
+
+.Usage
+[source, shell]
+----
+tmac@demo: ~ volume -h
+Usage: volume <percentage>|mute
+Ex. volume 30%
+    volume mute
+----
