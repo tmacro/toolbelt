@@ -1,0 +1,24 @@
+#!/bin/sh
+
+
+ignore() {
+	if [ ! -z "$@" ]; then
+		echo "Ignoring $@"
+		echo "$@" >> .gitignore
+	else
+		echo "Nothing to ignore..."
+	fi
+}
+
+if [ "$1" == "-f" ]; then
+	shift
+	ignore "$@"
+	exit 0
+fi
+
+if [ -d '.git' ]; then		
+	ignore "$@"
+else
+	echo "Not a git repo, use -f"
+	exit 1
+fi

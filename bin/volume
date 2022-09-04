@@ -1,0 +1,26 @@
+#!/bin/bash
+# volume
+
+set -x
+
+msgTag="on-volume-change"
+
+if [[ "$1" == "mute" ]]; then
+    pactl set-sink-mute 0 toggle
+else
+    pactl set-sink-volume 0 $1
+fi
+
+# Query amixer for the current volume and whether or not the speaker is muted
+volume="$(pactl get-sink-volume 0 | head -n1 | awk '{ print $5 }')"
+mute="$(pactl get-sink-mute 0 | cut -c 7-)"
+if [[ $volume == 0 || "$mute" == "yes" ]]; then
+    # Show the sound muted notification
+    dunstify -a "volume" -u low -i audio-volume-muted -h string:x-dunst-stack-tag:$msgTag "Volume Muted" 
+else
+    # Show the volume notification
+    dunstify -a "volume" -u low -i audio-volume-high -h string:x-dunst-stack-tag:$msgTag \
+    -h int:value:"$volume" "Volume: ${volume}"
+fi
+
+# Play the volume changed sound

@@ -1,0 +1,66 @@
+#!/bin/bash
+# generate a random password
+
+function usage {
+        echo "Usage: $(basename $0) [-dsu] [-l LENGTH]" 2>&1
+        echo 'Generate a random password.'
+        echo '   -l LENGTH   Specify the password length'
+        echo '   -s          Include the special characters +=/'
+        echo '   -d          Include digits'
+        echo '   -u          Only use upperace letters'
+        exit 1
+}
+
+function print_out {
+   local MESSAGE="${@}"
+   if [[ "${VERBOSE}" == true ]];then
+      echo "${MESSAGE}"
+   fi
+}
+
+# Set default token length
+LENGTH=32
+
+# Define list of arguments expected in the input
+optstring=":svudl:"
+
+while getopts ${optstring} arg; do
+  case ${arg} in
+    v)
+		VERBOSE='true'
+		;;
+    l)
+		LENGTH="${OPTARG}"
+		;;
+	d)
+		USE_DIGITS='true'
+		;;
+    s)
+		USE_SPECIAL_CHAR='true'
+		;;
+	u)
+		UPPER_CASE_ONLY='true'
+		;;
+    ?)
+		echo "Invalid option: -${OPTARG}."
+		echo
+		usage
+		;;
+  esac
+done
+
+FILTER='a-zA-Z'
+
+if [[ -n "$UPPER_CASE_ONLY" ]]; then
+	FILTER="A-Z"
+fi
+
+if [[ -n "$USE_DIGITS" ]]; then
+	FILTER="${FILTER}0-9"
+fi
+
+if [[ -n "$USE_SPECIAL_CHAR" ]]; then
+	FILTER="$FILTER+=/"
+fi
+
+cat /dev/urandom | LC_ALL=C tr -dc "$FILTER" | fold -w "$LENGTH" | head -n 1

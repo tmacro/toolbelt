@@ -1,0 +1,8 @@
+#!/bin/sh
+
+DOCKERFILE="FROM busybox\nCOPY . /build-context\nWORKDIR /build-context\nCMD find ."
+NONCE="/tmp/$(cat /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | fold -w 16 | head -n 1)"
+printf "$DOCKERFILE" > "$NONCE"
+docker build -f "$NONCE" -t build-context "$(pwd)" | grep "Sending build context to Docker daemon"
+docker run --rm -it build-context
+docker rmi build-context > /dev/null
