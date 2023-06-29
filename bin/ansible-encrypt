@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+usage() { echo "Usage: $0 [-k <path>]" 1>&2; exit 1; }
+
+while getopts ":k:" o; do
+    case "${o}" in
+        k)
+            keyfile=${OPTARG}
+            [ -f "${keyfile}" ] || usage
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${keyfile}" ]; then
+    usage
+fi
+
+echo "Using vault password file: ${keyfile}" >&2
+
+read -s -p "data: " data
+echo
+
+ansible-vault encrypt_string --vault-password-file "$keyfile" "$data"
+echo
