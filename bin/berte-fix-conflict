@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+set -ex
+
+function usage {
+        echo "Usage: $(basename $0) [-dsu] [-l LENGTH]" 2>&1
+        echo 'Fix conflicts with forward porting.'
+        echo '   -b BRANCH   Specify the branch with your changes'
+        echo '   -t TARGET   Target version to forward port to'
+        echo '   -h          Show this help'
+}
+
+# Define list of arguments expected in the input
+optstring=":b:t:"
+
+while getopts ${optstring} arg; do
+  case ${arg} in
+    b)
+		BRANCH="${OPTARG}"
+		;;
+	t)
+		TARGET="${OPTARG}"
+		;;
+	h)
+		usage
+        exit 0
+		;;
+    ?)
+		echo "Invalid option: -${OPTARG}."
+		echo
+		usage
+        exit 1
+		;;
+  esac
+done
+
+if [ -z "${BRANCH}" ]; then
+    echo "Branch with your changes is not specified."
+    echo
+    usage
+    exit 1
+fi
+
+if [ -z "${TARGET}" ]; then
+    echo "Target branch is not specified."
+    echo
+    usage
+    exit 1
+fi
+
+if [ ! -d .git ]; then
+    echo "Current directory is not a git repository."
+    exit 1
+fi
+
+# $ git checkout -B w/7.70/bugfix/CLDSRV-413/bump_version origin/development/7.70
+# $ git merge origin/bugfix/CLDSRV-413/bump_version
+# $ # <intense conflict resolution>
+# $ git commit
+# $ git push -u origin w/7.70/bugfix/CLDSRV-413/bump_version
+
+git fetch
+
+git checkout -B "w/$TARGET/$BRANCH" "origin/development/$TARGET"
+
+git merge "origin/$BRANCH"

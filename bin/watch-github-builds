@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+
+import os
+import json
+import time
+
+import requests
+import argparse
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Watch GitHub builds')
+    parser.add_argument('--repo', type=str, required=True, help='Repository to watch')
+    parser.add_argument('--branch', type=str, required=True, help='Branch to watch')
+    parser.add_argument('--token-file', type=str, required=False, help='File containing GitHub personal access token')
+    parser.add_argument('--cmd', type=str, required=False, help='Command to run on workflow completion. This can include python templating syntax to access workflow attributes.')
+    parser.add_argument('--once', action='store_true', help='Run once and exit. (Default: False)')
+
+    return parser.parse_args()
+
+
+def get_workflow_actions(owner, repo, branch, token):
+    """
+    Fetches the workflow actions for a branch in a repository using GitHub API.
+
+    Args:
+        owner (str): Owner of the repository.
+        repo (str): Name of the repository.
+        branch (str): Name of the branch to fetch workflow actions from.
+        token (str): GitHub personal access token for authentication.
+
+    Returns:
+        list: List of workflow actions for the branch.
+    """
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs"
+    params = {
+        "branch": branch
+    }
+    headers = {
+        "Authorization": f"Token {token}",
+        "Accept": "application/vnd.github+json"
+    }
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        try:
+            workflow_actions = response.json()["workflow_runs"]
+            return workflow_actions
+        except Exception as e:
+            print(f"Failed to parse workflow actions for branch {branch}.")
+            return None
+    else:
+        print(f"Failed to fetch workflow actions for branch {branch}.")
+        return None
+
+
+def watch_workflows(owner, repo, branch, token):
+    completed = {}
+    while True:
+        workflows = get_workflow_actions(owner, repo, branch, token)
+        if workflows is None:
+            break
+        has_running_actions = False
+        for workflow in workflows:
+            if workflow["status"] == "completed" and workflow["id"] not in completed:
+                yield workflow
+                completed[workflow["id"]] = True
+            else:
+                has_running_actions = True
+        if not has_running_actions:
+            break
+        time.sleep(5)
+
+if __name__ == "__main__":
+    # Get the GitHub personal access token from the environment variable
+    auth_token = os.environ.get("GITHUB_AUTH_TOKEN")
+    if auth_token is None:
+        print("GITHUB_AUTH_TOKEN environment variable not set.")
+        exit(1)
+
+    args = get_args()
+
+    owner, repo = args.repo.split("/")
+
+    while True:
+        for completed_workflow in watch_workflows(owner, repo, args.branch, auth_token):
+            print(f'{completed_workflow["name"]:40} {completed_workflow["conclusion"]}')
+            if args.cmd:
+                os.system(args.cmd.format(**completed_workflow))
+
+        if args.once:
+            break
+
+        time.sleep(60)
