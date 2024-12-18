@@ -1,0 +1,50 @@
+#!/usr/bin/bash
+
+BATT_DEVICE=BAT1
+
+BATTERY_CAPACITY=$(cat /sys/class/power_supply/$BATT_DEVICE/capacity)
+BATTERY_STATUS=$(cat /sys/class/power_supply/$BATT_DEVICE/status)
+
+# echo "Battery Capacity: $BATTERY_CAPACITY%"
+# echo "Battery Status: $BATTERY_STATUS"
+
+SHUTDOWN_WITH=3
+
+NOTIFY_TITLE="Battery Critically Low"
+NOTIFY_ICON=battery_empty
+NOTIFY_MESSAGE="The computer will shutdown in 1 minute."
+
+function cancel_notification {
+	notify-send --replace-id "$1" --expire-time 5000 --urgency=normal --hint=int:transient:1 --icon "$NOTIFY_ICON" "Shutdown Cancelled" "Battery is now charging."
+}
+
+function update_notification {
+	notify-send --replace-id "$1" --urgency=critical --hint=int:transient:1 --icon "$NOTIFY_ICON" "$NOTIFY_TITLE" "$2"
+}
+
+if [[ $BATTERY_CAPACITY -le $SHUTDOWN_WITH && $BATTERY_STATUS = "Discharging" ]]; then
+	notif_id=$(notify-send --print-id --urgency=critical --hint=int:transient:1 --icon "$NOTIFY_ICON" "$NOTIFY_TITLE" "The computer will shutdown in 1 minute.")
+	sleep 30s
+
+	BATTERY_STATUS=$(cat /sys/class/power_supply/$BATT_DEVICE/status)
+	if [[ $BATTERY_STATUS != "Discharging" ]]; then
+		cancel_notification $notif_id
+		exit 0
+	fi
+	update_notification $notif_id "The computer will shutdown in 30 seconds."
+	sleep 20s
+
+	if [[ $BATTERY_STATUS != "Discharging" ]]; then
+		cancel_notification $notif_id
+		exit 0
+	fi
+	update_notification $notif_id "The computer will shutdown in 10 seconds."
+	sleep 10s
+
+	BATTERY_STATUS=$(cat /sys/class/power_supply/$BATT_DEVICE/status)
+	if [[ $BATTERY_STATUS != "Discharging" ]]; then
+		cancel_notification $notif_id
+		exit 0
+	fi
+	systemctl poweroff
+fi
