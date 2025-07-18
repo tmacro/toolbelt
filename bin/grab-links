@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+# This script grabs a link to an image from the clipboard and downloads it to the current directory.
+
+import subprocess
+from urllib.parse import urlparse
+import pathlib
+import queue
+import threading
+
+def wait_for_change():
+    subprocess.run(["clipnotify"], capture_output=False)
+
+
+def get_clipboard_contents():
+    proc = subprocess.run(
+        ["xclip", "-o", "-selection", "clipboard"], stdout=subprocess.PIPE
+    )
+    return proc.stdout.decode("utf-8")
+
+
+def download_link(url):
+    subprocess.run(["aria2c", "--file-allocation=none", url], capture_output=False)
+
+
+image_extensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff"]
+video_extensions = ["mp4", "mov"]
+valid_extensions = image_extensions + video_extensions
+
+
+def uri_validator(x):
+    try:
+        result = urlparse(x)
+        if all([result.scheme, result.netloc]):
+            if pathlib.Path(result.path).suffix[1:] in valid_extensions:
+                return True
+        return False
+    except:
+        return False
+
+
+download_queue = queue.Queue()
+
+def download_urls(q):
+    while True:
+        url = q.get()
+        print(f"Downloading {url}")
+        download_link(url)
+        print(f"Downloaded {url}")
+        print(f"items in queue: {q.qsize()}")
+   
+
+if __name__ == "__main__":
+    last_data = get_clipboard_contents()
+
+    worker = threading.Thread(target=download_urls, args=[download_queue], daemon=True)
+    worker.start()
+
+    while True:
+        wait_for_change()
+        url = get_clipboard_contents()
+        if url == last_data:
+            continue
+        last_data = url
+        if not uri_validator(url):
+            print(f"Invalid URL: {url}")
+            continue
+        download_queue.put(url)
+        print(f"added url to queue {url}")
