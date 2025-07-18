@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+DIR_TO_WATCH=$1
+shift
+
+inotifywait -e close_write,moved_to,create -m "$DIR_TO_WATCH" --recursive |
+while read -r directory events filename; do
+    printf "file changed: %s%s\n" "$directory" "$filename"
+    $@
+done
