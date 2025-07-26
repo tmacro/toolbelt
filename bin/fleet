@@ -1,0 +1,6 @@
+#!/bin/sh
+
+p=$(realpath $1)
+
+jetbrains-fleet "$p" 2>/dev/null 1>/dev/null &
+
